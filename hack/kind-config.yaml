@@ -1,0 +1,12 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: getoffyoursaas
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      # Publishes the ingest NodePort onto the Mac so the iPhone can reach it
+      # over the LAN at http://<mac-lan-ip>:30080
+      - containerPort: 30080
+        hostPort: 30080
+        listenAddress: "0.0.0.0"
+        protocol: TCP

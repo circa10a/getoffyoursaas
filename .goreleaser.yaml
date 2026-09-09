@@ -1,0 +1,11 @@
+version: 2
+
+# No binaries are published: this is a controller, distributed as a container
+# image and a Helm chart. GoReleaser is used only to cut the GitHub Release and
+# generate its changelog.
+builds:
+  - skip: true
+
+changelog:
+  disable: false
+  sort: asc

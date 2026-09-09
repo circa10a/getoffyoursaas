@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/name: {{ include "getoffyoursaas.name" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    control-plane: controller-manager
+  name: {{ include "getoffyoursaas.resourceName" (dict "suffix" "ingest-service" "context" $) }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+  - name: ingest
+    nodePort: 30080
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app.kubernetes.io/name: {{ include "getoffyoursaas.name" . }}
+    control-plane: controller-manager
+  type: NodePort

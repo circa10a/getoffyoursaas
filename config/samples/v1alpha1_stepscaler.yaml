@@ -1,0 +1,14 @@
+apiVersion: getoffyoursaas.io/v1alpha1
+kind: StepScaler
+metadata:
+  name: lazy-app
+  namespace: default
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: lazy-app
+  containerName: "*"
+  dailyStepGoal: 10000
+  minCPU: 100m
+  maxCPU: 1000m

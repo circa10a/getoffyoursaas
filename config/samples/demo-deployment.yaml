@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lazy-app
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: lazy-app}
+  template:
+    metadata:
+      labels: {app: lazy-app}
+    spec:
+      containers:
+        - name: busy
+          image: busybox:1.37
+          # Generates modest steady CPU so VPA has real usage to observe. The
+          # sleep is deliberate: a bare `while true; do :; done` pegs a full
+          # core, which on a laptop means fan noise and battery drain for the
+          # whole demo. This is enough for the recommender to see a signal.
+          command: ["sh", "-c", "while true; do awk 'BEGIN{for(i=0;i<200000;i++);}'; sleep 1; done"]
+          resources:
+            requests:
+              cpu: 50m
+              memory: 16Mi
