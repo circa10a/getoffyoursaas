@@ -8,8 +8,8 @@ layout:
 - go.kubebuilder.io/v4
 plugins:
   helm.kubebuilder.io/v2-alpha:
-    manifests: dist/install.yaml
-    output: dist
+    manifests: deploy/install.yaml
+    output: deploy/
 projectName: getoffyoursaas
 repo: github.com/circa10a/getoffyoursaas
 resources:

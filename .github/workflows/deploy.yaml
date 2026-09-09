@@ -56,7 +56,7 @@ jobs:
       - name: Package Helm Chart
         run: make pkg-helm-chart VERSION=${{ needs.semver.outputs.tag }}
       - name: Push Helm Chart to DockerHub
-        run: helm push bin/*.tgz oci://$HELM_REGISTRY/${{ github.repository_owner }}
+        run: helm push dist/*.tgz oci://$HELM_REGISTRY/${{ github.repository_owner }}
 
   docker:
     runs-on: ubuntu-latest

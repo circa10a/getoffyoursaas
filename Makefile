@@ -146,18 +146,15 @@ docker-buildx: ## Build and push docker image for the manager for cross-platform
 
 .PHONY: build-installer
 build-installer: manifests generate kustomize ## Generate a consolidated YAML with CRDs and deployment.
-	mkdir -p dist
+	mkdir -p deploy
 	cd config/manager && "$(KUSTOMIZE)" edit set image controller=${IMG}
-	"$(KUSTOMIZE)" build config/default > dist/install.yaml
+	"$(KUSTOMIZE)" build config/default > deploy/install.yaml
 
 .PHONY: pkg-helm-chart
 pkg-helm-chart: ## Package the Helm chart for release. Requires VERSION, e.g. VERSION=v0.1.0.
 	@test -n "$(VERSION)" || { echo "VERSION is required, e.g. make pkg-helm-chart VERSION=v0.1.0"; exit 1; }
-# Strip the leading "v" for the chart version (SemVer) but keep it for appVersion,
-# so the chart version and the docker tag stay distinguishable.
-# Output goes to bin/ rather than dist/ because dist/chart is committed and we do
-# not want packaged .tgz files showing up as untracked noise there.
-	helm package ./dist/chart -d bin --version $(patsubst v%,%,$(VERSION)) --app-version $(VERSION)
+# Strip "v" from the version tag to ensure we don't overwrite the docker tag
+	helm package ./deploy/chart -d dist --version $(patsubst v%,%,$(VERSION)) --app-version $(VERSION)
 
 ##@ Deployment
 
@@ -294,7 +291,7 @@ HELM_NAMESPACE ?= getoffyoursaas-system
 ## Name of the Helm release
 HELM_RELEASE ?= getoffyoursaas
 ## Path to the Helm chart directory
-HELM_CHART_DIR ?= dist/chart
+HELM_CHART_DIR ?= deploy/chart
 ## Additional arguments to pass to helm commands
 HELM_EXTRA_ARGS ?=
 

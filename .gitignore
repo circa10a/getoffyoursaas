@@ -28,3 +28,8 @@ go.work
 
 # Kubeconfig might contain secrets
 *.kubeconfig
+
+# GoReleaser output. The Helm chart lives in deploy/ precisely so it cannot
+# collide with this: goreleaser runs `release --clean` here and refuses to
+# release from a dirty tree.
+dist/

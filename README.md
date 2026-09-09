@@ -65,7 +65,7 @@ lazy-app   lazy-app   7431    768m   10000
 #### Kubectl
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/circa10a/getoffyoursaas/main/dist/install.yaml
+kubectl apply -f https://raw.githubusercontent.com/circa10a/getoffyoursaas/main/deploy/install.yaml
 ```
 
 #### Helm
