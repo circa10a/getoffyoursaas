@@ -34,14 +34,14 @@ var _ = Describe("StepScaler controller", func() {
 
 	reconcileOnce := func(name string) {
 		_, err := newReconciler().Reconcile(ctx, reconcile.Request{
-			NamespacedName: types.NamespacedName{Name: name, Namespace: ns},
+			Name: name, Namespace: ns,
 		})
 		Expect(err).NotTo(HaveOccurred())
 	}
 
 	createStepScaler := func(name, min, max string) {
 		ss := &getoffyoursaasiov1alpha1.StepScaler{
-			ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: ns},
+			Name: name, Namespace: ns,
 			Spec: getoffyoursaasiov1alpha1.StepScalerSpec{
 				ScaleTargetRef: autoscalingv1.CrossVersionObjectReference{
 					APIVersion: "apps/v1", Kind: "Deployment", Name: name,
@@ -109,6 +109,37 @@ var _ = Describe("StepScaler controller", func() {
 		Expect(*vpa.Spec.ResourcePolicy.ContainerPolicies[0].ControlledResources).To(Equal([]corev1.ResourceName{corev1.ResourceCPU}))
 	})
 
+	It("honors an update mode set on the spec", func() {
+		ss := &getoffyoursaasiov1alpha1.StepScaler{
+			Name: "in-place", Namespace: ns,
+			Spec: getoffyoursaasiov1alpha1.StepScalerSpec{
+				ScaleTargetRef: autoscalingv1.CrossVersionObjectReference{
+					APIVersion: "apps/v1", Kind: "Deployment", Name: "in-place",
+				},
+				ContainerName: "*",
+				DailyStepGoal: 10000,
+				MinCPU:        resource.MustParse("100m"),
+				MaxCPU:        resource.MustParse("1000m"),
+				UpdateMode:    vpav1.UpdateModeInPlaceOrRecreate,
+			},
+		}
+		Expect(k8sClient.Create(ctx, ss)).To(Succeed())
+		reconcileOnce("in-place")
+
+		vpa := getVPA("in-place")
+		Expect(vpa.Spec.UpdatePolicy).NotTo(BeNil())
+		Expect(vpa.Spec.UpdatePolicy.UpdateMode).NotTo(BeNil())
+		Expect(*vpa.Spec.UpdatePolicy.UpdateMode).To(Equal(vpav1.UpdateModeInPlaceOrRecreate))
+
+		By("tracking later edits to the mode")
+		ss = getStepScaler("in-place")
+		ss.Spec.UpdateMode = vpav1.UpdateModeOff
+		Expect(k8sClient.Update(ctx, ss)).To(Succeed())
+		reconcileOnce("in-place")
+
+		Expect(*getVPA("in-place").Spec.UpdatePolicy.UpdateMode).To(Equal(vpav1.UpdateModeOff))
+	})
+
 	It("is idempotent when nothing has changed", func() {
 		createStepScaler("idempotent", "100m", "1000m")
 		reconcileOnce("idempotent")
@@ -161,7 +192,7 @@ var _ = Describe("StepScaler controller", func() {
 			Scheme:   k8sClient.Scheme(),
 			Recorder: recorder,
 		}).Reconcile(ctx, reconcile.Request{
-			NamespacedName: types.NamespacedName{Name: "inverted", Namespace: ns},
+			Name: "inverted", Namespace: ns,
 		})
 		Expect(err).NotTo(HaveOccurred())
 

@@ -5,6 +5,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	vpav1 "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/apis/autoscaling.k8s.io/v1"
 )
 
 // StepScalerSpec defines the desired state of StepScaler.
@@ -20,6 +21,14 @@ type StepScalerSpec struct {
 	// +kubebuilder:default="*"
 	// +optional
 	ContainerName string `json:"containerName,omitempty"`
+
+	// UpdateMode is copied to the owned VPA's updatePolicy.updateMode, choosing
+	// how a new CPU floor reaches running pods. Recreate evicts them; the
+	// in-place modes need VPA's in-place resize support. The accepted values are
+	// inherited from the VPA type, so they track the VPA version in go.mod.
+	// +kubebuilder:default=Recreate
+	// +optional
+	UpdateMode vpav1.UpdateMode `json:"updateMode,omitempty"`
 
 	// DailyStepGoal is the step count that earns MaxCPU.
 	// +kubebuilder:validation:Minimum=1

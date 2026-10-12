@@ -79,9 +79,9 @@ func (r *StepScalerReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	}
 
 	vpa := &vpav1.VerticalPodAutoscaler{
-		ObjectMeta: metav1.ObjectMeta{Name: ss.Name, Namespace: ss.Namespace},
+		Name: ss.Name, Namespace: ss.Namespace,
 	}
-	updateMode := vpav1.UpdateModeRecreate
+	updateMode := ss.Spec.UpdateMode
 	controlled := []corev1.ResourceName{corev1.ResourceCPU}
 
 	op, err := controllerutil.CreateOrUpdate(ctx, r.Client, vpa, func() error {

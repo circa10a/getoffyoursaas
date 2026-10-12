@@ -12,7 +12,6 @@ import (
 
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -40,7 +39,7 @@ func testServer(t *testing.T, funcs ...interceptor.Funcs) (*Server, func() *geto
 	}
 
 	ss := &getoffyoursaasiov1alpha1.StepScaler{
-		ObjectMeta: metav1.ObjectMeta{Name: testName, Namespace: "default"},
+		Name: testName, Namespace: "default",
 		Spec: getoffyoursaasiov1alpha1.StepScalerSpec{
 			ScaleTargetRef: autoscalingv1.CrossVersionObjectReference{
 				APIVersion: "apps/v1", Kind: "Deployment", Name: testName,
