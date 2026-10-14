@@ -145,10 +145,14 @@ docker-buildx: ## Build and push docker image for the manager for cross-platform
 	rm Dockerfile.cross
 
 .PHONY: build-installer
-build-installer: manifests generate kustomize ## Generate a consolidated YAML with CRDs and deployment.
+build-installer: manifests generate kustomize kubebuilder ## Generate a consolidated YAML with CRDs and deployment.
 	mkdir -p deploy
 	cd config/manager && "$(KUSTOMIZE)" edit set image controller=${IMG}
 	"$(KUSTOMIZE)" build config/default > deploy/install.yaml
+# The chart's CRD templates are scaffolded from install.yaml, so they go stale
+# whenever an API field is added. Regenerating here keeps deploy/ internally
+# consistent; CI enforces it with a git diff.
+	"$(KUBEBUILDER)" edit --plugins=helm/v2-alpha --manifests deploy/install.yaml --output-dir deploy/
 
 .PHONY: pkg-helm-chart
 pkg-helm-chart: ## Package the Helm chart for release. Requires VERSION, e.g. VERSION=v0.1.0.
@@ -213,10 +217,17 @@ KUSTOMIZE ?= $(LOCALBIN)/kustomize
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
 GOLANGCI_LINT = $(LOCALBIN)/golangci-lint
+KUBEBUILDER ?= $(LOCALBIN)/kubebuilder
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.8.1
 CONTROLLER_TOOLS_VERSION ?= v0.21.0
+
+# Must track PROJECT's cliVersion. The helm/v2-alpha plugin rewrites the chart's
+# templates to whatever the running CLI scaffolds, so a newer CLI reshapes files
+# it was not asked to touch (v4.16.0 rewrites manager.yaml to reference a
+# values.yaml key this chart does not define, breaking helm lint).
+KUBEBUILDER_VERSION ?= v4.15.0
 
 #ENVTEST_VERSION is the controller-runtime release branch to use for setup-envtest, derived from go.mod.
 # A release branch rather than the exact tag: setup-envtest is its own nested module tagged
@@ -259,6 +270,11 @@ $(ENVTEST): $(LOCALBIN)
 golangci-lint: $(GOLANGCI_LINT) ## Download golangci-lint locally if necessary.
 $(GOLANGCI_LINT): $(LOCALBIN)
 	$(call go-install-tool,$(GOLANGCI_LINT),github.com/golangci/golangci-lint/v2/cmd/golangci-lint,$(GOLANGCI_LINT_VERSION))
+
+.PHONY: kubebuilder
+kubebuilder: $(KUBEBUILDER) ## Download kubebuilder locally if necessary.
+$(KUBEBUILDER): $(LOCALBIN)
+	$(call go-install-tool,$(KUBEBUILDER),sigs.k8s.io/kubebuilder/v4,$(KUBEBUILDER_VERSION))
 	@test -f .custom-gcl.yml && { \
 		echo "Building custom golangci-lint with plugins..." && \
 		$(GOLANGCI_LINT) custom --destination $(LOCALBIN) --name golangci-lint-custom && \

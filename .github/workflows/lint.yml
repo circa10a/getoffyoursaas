@@ -27,3 +27,14 @@ jobs:
         run: make lint-config
       - name: Run linter
         run: make lint
+
+      # make manifests only writes config/crd/bases, so a new API field can ship
+      # in a chart whose CRD never declared it. build-installer regenerates
+      # deploy/ in full; any diff here means someone added a field without it.
+      - name: Check generated deploy artifacts are up to date
+        run: |
+          make build-installer
+          if ! git diff --exit-code -- deploy/; then
+            echo "::error::deploy/ is stale. Run 'make build-installer' and commit the result."
+            exit 1
+          fi

@@ -105,6 +105,21 @@ spec:
                 - name
                 type: object
                 x-kubernetes-map-type: atomic
+              updateMode:
+                default: Recreate
+                description: |-
+                  UpdateMode is copied to the owned VPA's updatePolicy.updateMode, choosing
+                  how a new CPU floor reaches running pods. Recreate evicts them; the
+                  in-place modes need VPA's in-place resize support. The accepted values are
+                  inherited from the VPA type, so they track the VPA version in go.mod.
+                enum:
+                - "Off"
+                - Initial
+                - Recreate
+                - InPlaceOrRecreate
+                - InPlace
+                - Auto
+                type: string
             required:
             - dailyStepGoal
             - maxCPU
